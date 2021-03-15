@@ -5,7 +5,7 @@ import pygame
 pygame.init()
 
 def create_grid(i, j):
-    node = pygame.Surface(20, 20)
+    node = pygame.Surface((20, 20))
     node_rect = node.get_rect(topleft=(i * 20, j * 20))
     return node_rect
 

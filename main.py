@@ -12,6 +12,7 @@ screen_width = 800
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 black = (0, 0, 0)  # barier
+grey = (128,128,128)
 white = (255, 255, 255)  # basic node
 red = (255, 0, 0)  # closed
 green = (0, 255, 0)  # opened
@@ -105,6 +106,21 @@ def path(last_node, current, draw):
         current.path()
         draw(screen, grid, rows, cols, screen_width, screen_height)
 
+def borders(gird):
+    for row in grid:
+        for node in row:
+            if row == grid[0] or row == grid[-1]:
+                node.make_barrier()
+            if node == row[0] or node == row[-1]:
+                node.make_barrier()
+
+def is_border(row, col):
+    if row == 0 or row == rows-1:
+        return True
+    elif col == 0 or col == cols-1:
+        return True
+    else:
+        return False
 
 def algorithm(grid, start, end):
     count = 0
@@ -171,27 +187,12 @@ def create_grid(rows, cols, width, height):
             grid[i].append(node)
     return grid
 
-
-def draw_grid(screen, rows, cols, width, height):
-    node_height = height // rows
-    node_width = width // cols
-
-    for i in range(rows):
-        pygame.draw.line(screen, black, (0, i*node_height),
-                        (width, i * node_height))
-        for j in range(cols):
-            pygame.draw.line(screen, black, (j*node_width, 0),
-                            (j * node_width, height))
-
-
 def draw(screen, grid, rows, cols, width, height):
     screen.fill(white)
-
     for row in grid:
         for node in row:
             node.draw(screen)
-
-    draw_grid(screen, rows, cols, width, height)
+    borders(grid)
     pygame.display.update()
 
 
@@ -216,8 +217,8 @@ end = None
 run = True
 started = False
 
-while run:
 
+while run:
     draw(screen, grid, rows, cols, screen_width, screen_height)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -232,28 +233,36 @@ while run:
         row, col = get_pos(pos, rows, cols, screen_width, screen_height)
         node = grid[row][col]
 
-        if not start and node != end:
-            start = node
-            start.make_start()
+        if is_border(row, col):
+            pass
+        elif not is_border(row, col):
+            if not start and node != end :
+                start = node
+                start.make_start()
 
-        elif not end and node != start:
-            end = node
-            end.make_end()
+            elif not end and node != start:
+                end = node
+                end.make_end()
 
-        elif node != end and node != start:
-            node.make_barrier()
+            elif node != end and node != start:
+                node.make_barrier()
 
     elif mouse[2]:
         pos = pygame.mouse.get_pos()
         row, col = get_pos(pos, rows, cols, screen_width, screen_height)
-        node = grid[row][col]
-        node.reset()
 
-        if node == start:
-            start = None
+        if is_border(row, col):
+            pass
 
-        elif node == end:
-            end = None
+        elif not is_border(row, col):
+            node = grid[row][col]
+            node.reset()
+
+            if node == start:
+                start = None
+
+            elif node == end:
+                end = None
 
     key = pygame.key.get_pressed()
 
@@ -263,9 +272,8 @@ while run:
                 node.update_neighbors(grid)
 
         algorithm(grid, start, end)
-    
+
     if key[K_c]:
         start = None
         end = None
         grid = create_grid(rows, cols, screen_width, screen_height)
-

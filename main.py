@@ -67,7 +67,10 @@ class Node():
     def make_end(self):
         self.color = blue
 
-    def path(self):
+    def path_node(self):
+        return self.color == purple
+
+    def make_path(self):
         self.color = purple
 
     def reset(self):
@@ -81,6 +84,14 @@ class Node():
             self.color = grey
         if self.col == 0 or self.col == self.total_cols-1:
             self.color = grey
+
+    def reset_barriers(self):
+        if self.barrier_node():
+            self.reset()
+
+    def reset_path(self):
+        if self.closed_node() or self.opened_node() or self.path_node():
+            self.reset()
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color,
@@ -122,7 +133,7 @@ def h_score(p1, p2):
 def path(last_node, current, draw):
     while current in last_node:
         current = last_node[current]
-        current.path()
+        current.make_path()
         draw(screen, grid, rows, cols, screen_width, screen_height)
 
 
@@ -212,8 +223,8 @@ def get_pos(pos, rows, cols, width, height):
     return row, col
 
 
-rows = 100
-cols = 100
+rows = 50
+cols = 50
 
 grid = create_grid(rows, cols, screen_width, screen_height)
 
@@ -282,3 +293,15 @@ while run:
         start = None
         end = None
         grid = create_grid(rows, cols, screen_width, screen_height)
+
+    if key[K_b]:
+        # Reset only barriers.
+        for row in grid:
+            for node in row:
+                node.reset_barriers()
+    
+    if key[K_r]:
+        # Reset path, opened and closed nodes.
+        for row in grid:
+            for node in row:
+                node.reset_path()

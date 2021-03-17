@@ -12,13 +12,14 @@ screen_width = 800
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 black = (0, 0, 0)  # barier
-grey = (128,128,128)
+grey = (128, 128, 128)
 white = (255, 255, 255)  # basic node
 red = (255, 0, 0)  # closed
 green = (0, 255, 0)  # opened
 blue = (0, 0, 255)  # finish
 orange = (255, 165, 0)  # start
 purple = (255, 0, 255)  # path
+
 
 class Node():
     def __init__(self, row, col, width, height, total_rows, total_cols):
@@ -72,6 +73,15 @@ class Node():
     def reset(self):
         self.color = white
 
+    def border_node(self):
+        return self.color == grey
+
+    def make_border(self):
+        if self.row == 0 or self.row == self.total_rows-1:
+            self.color = grey
+        if self.col == 0 or self.col == self.total_cols-1:
+            self.color = grey
+
     def draw(self, screen):
         pygame.draw.rect(screen, self.color,
                          (self.x, self.y, self.width, self.height))
@@ -79,19 +89,27 @@ class Node():
     def update_neighbors(self, grid):
         self.neighbors = []
         # Down.
-        if self.row < self.total_rows - 1 and not grid[self.row + 1][self.col].barrier_node():
+        if self.row < self.total_rows - 1 and not \
+            (grid[self.row + 1][self.col].barrier_node() or
+             grid[self.row + 1][self.col].border_node()):
             self.neighbors.append(grid[self.row+1][self.col])
 
         # Up.
-        if self.row > 0 and not grid[self.row - 1][self.col].barrier_node():
+        if self.row > 0 and not \
+            (grid[self.row - 1][self.col].barrier_node() or
+             grid[self.row - 1][self.col].border_node()):
             self.neighbors.append(grid[self.row - 1][self.col])
 
         # Right
-        if self.col < self.total_rows - 1 and not grid[self.row][self.col + 1].barrier_node():
+        if self.col < self.total_rows - 1 and not \
+            (grid[self.row][self.col + 1].barrier_node() or
+             grid[self.row][self.col + 1].border_node()):
             self.neighbors.append(grid[self.row][self.col + 1])
 
         # left
-        if self.col > 0 and not grid[self.row][self.col - 1].barrier_node():
+        if self.col > 0 and not \
+            (grid[self.row][self.col - 1].barrier_node() or
+             grid[self.row][self.col - 1].border_node()):
             self.neighbors.append(grid[self.row][self.col - 1])
 
 
@@ -100,11 +118,13 @@ def h_score(p1, p2):
     x2, y2 = p2
     return abs(x1 - x2) + abs(y1 - y2)
 
+
 def path(last_node, current, draw):
     while current in last_node:
         current = last_node[current]
         current.path()
         draw(screen, grid, rows, cols, screen_width, screen_height)
+
 
 def borders(gird):
     for row in grid:
@@ -114,6 +134,7 @@ def borders(gird):
             if node == row[0] or node == row[-1]:
                 node.make_barrier()
 
+
 def is_border(row, col):
     if row == 0 or row == rows-1:
         return True
@@ -121,6 +142,7 @@ def is_border(row, col):
         return True
     else:
         return False
+
 
 def algorithm(grid, start, end):
     count = 0
@@ -187,12 +209,13 @@ def create_grid(rows, cols, width, height):
             grid[i].append(node)
     return grid
 
+
 def draw(screen, grid, rows, cols, width, height):
     screen.fill(white)
     for row in grid:
         for node in row:
             node.draw(screen)
-    borders(grid)
+            node.make_border()
     pygame.display.update()
 
 
@@ -206,8 +229,8 @@ def get_pos(pos, rows, cols, width, height):
     return row, col
 
 
-rows = 50
-cols = 50
+rows = 100
+cols = 100
 
 grid = create_grid(rows, cols, screen_width, screen_height)
 
@@ -236,7 +259,7 @@ while run:
         if is_border(row, col):
             pass
         elif not is_border(row, col):
-            if not start and node != end :
+            if not start and node != end:
                 start = node
                 start.make_start()
 

@@ -353,11 +353,6 @@ while run:
     # Check for key presses.
     key = pygame.key.get_pressed()
 
-    # Randomly generate barriers. Do only once.
-    if key[K_r] and not random_select:
-        random_barriers(grid, probability)
-        random_select = True
-
     # Start the alghoritm if start and end is given.
     if key[K_RETURN] and start and end:
         for row in grid:
@@ -378,6 +373,11 @@ while run:
             pyautogui.alert(f"{r}\n{b}\n{c}")
         pressed = True
         finished = False
+
+     # Randomly generate barriers. Do only once.
+    if key[K_r] and not random_select:
+        random_barriers(grid, probability)
+        random_select = True
 
     # Reset everything.
     if key[K_c]:

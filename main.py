@@ -1,8 +1,11 @@
 import sys
 from queue import PriorityQueue
+import random
+
 
 import pygame
 from pygame.locals import *
+import pyautogui
 
 pygame.init()
 
@@ -11,14 +14,19 @@ screen_width = 800
 
 screen = pygame.display.set_mode((screen_width, screen_height))
 
-black = (0, 0, 0)  # barier
-grey = (128, 128, 128)
-white = (255, 255, 255)  # basic node
-red = (255, 0, 0)  # closed
-green = (0, 255, 0)  # opened
-blue = (0, 0, 255)  # finish
-orange = (255, 165, 0)  # start
-purple = (255, 0, 255)  # path
+black = (0, 0, 0)  # Bariers.
+grey = (128, 128, 128)  # Borders.
+white = (255, 255, 255)  # Common node.
+red = (255, 0, 0)  # Closed node.
+green = (0, 255, 0)  # Opened node.
+blue = (0, 0, 255)  # End node.
+orange = (255, 165, 0)  # Start node.
+purple = (255, 0, 255)  # Path.
+
+rows = 50
+cols = 50
+
+probability = 5
 
 
 class Node():
@@ -124,10 +132,39 @@ class Node():
             self.neighbors.append(grid[self.row][self.col - 1])
 
 
-def h_score(p1, p2):
-    x1, y1 = p1
-    x2, y2 = p2
-    return abs(x1 - x2) + abs(y1 - y2)
+def create_grid(rows, cols, width, height):
+    grid = []
+    node_height = height // rows
+    node_width = width // cols
+    for i in range(rows):
+        grid.append([])
+        for j in range(cols):
+            node = Node(i, j, node_width, node_height, rows, cols)
+            grid[i].append(node)
+    return grid
+
+
+def random_barriers(grid, n):
+    for row in grid:
+        for node in row:
+            number = random.randint(1, n)
+            if number == 1 and not \
+                    (node.border_node()
+                     or node.start_node()
+                     or node.end_node()):
+                node.make_barrier()
+            else:
+                pass
+
+
+def draw(screen, grid, rows, cols, width, height):
+    screen.fill(white)
+    for row in grid:
+        for node in row:
+            node.draw(screen)
+            node.make_border()
+
+    pygame.display.update()
 
 
 def path(last_node, current, draw):
@@ -137,7 +174,24 @@ def path(last_node, current, draw):
         draw(screen, grid, rows, cols, screen_width, screen_height)
 
 
+def h_score(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    return abs(x1 - x2) + abs(y1 - y2)
+
+
+def get_pos(pos, rows, cols, width, height):
+    node_height = height // rows
+    node_width = width // cols
+    y, x = pos
+    row = y // node_height
+    col = x // node_width
+
+    return row, col
+
+
 def algorithm(grid, start, end):
+    global finished
     count = 0
     open_set = PriorityQueue()
     open_set.put((0, count, start))
@@ -166,7 +220,9 @@ def algorithm(grid, start, end):
             path(last_node, end, draw)
             end.make_end()
             start.make_start()
-            return True
+
+            finished = True
+            return finished
 
         for neighbor in current.neighbors:
             temp_g_score = g_score[current] + 1
@@ -191,51 +247,20 @@ def algorithm(grid, start, end):
     return False
 
 
-def create_grid(rows, cols, width, height):
-    grid = []
-    node_height = height // rows
-    node_width = width // cols
-    for i in range(rows):
-        grid.append([])
-        for j in range(cols):
-            node = Node(i, j, node_width, node_height, rows, cols)
-            grid[i].append(node)
-    return grid
-
-
-def draw(screen, grid, rows, cols, width, height):
-    screen.fill(white)
-    for row in grid:
-        for node in row:
-            node.draw(screen)
-            node.make_border()
-
-    pygame.display.update()
-
-
-def get_pos(pos, rows, cols, width, height):
-    node_height = height // rows
-    node_width = width // cols
-    y, x = pos
-    row = y // node_height
-    col = x // node_width
-
-    return row, col
-
-
-rows = 50
-cols = 50
-
 grid = create_grid(rows, cols, screen_width, screen_height)
 
 start = None
 end = None
 
 run = True
-started = False
 
+finished = False
+pressed = False
+
+random_select = False
 
 while run:
+
     draw(screen, grid, rows, cols, screen_width, screen_height)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -282,6 +307,10 @@ while run:
 
     key = pygame.key.get_pressed()
 
+    if key[K_r] and not random_select:
+        random_barriers(grid, probability)
+        random_select = True
+
     if key[K_RETURN] and start and end:
         for row in grid:
             for node in row:
@@ -289,7 +318,17 @@ while run:
 
         algorithm(grid, start, end)
 
+    if finished:
+        if not pressed:
+            r = "Press P to clear path, open and closed nodes"
+            b = "Press B to clear only barriers"
+            c = "Press C to clear everything"
+            pyautogui.alert(f"{r}\n{b}\n{c}")
+        pressed = True
+        finished = False
+
     if key[K_c]:
+        # Reset everything.
         start = None
         end = None
         grid = create_grid(rows, cols, screen_width, screen_height)
@@ -299,9 +338,11 @@ while run:
         for row in grid:
             for node in row:
                 node.reset_barriers()
-    
-    if key[K_r]:
+        random_select = False
+
+    if key[K_p]:
         # Reset path, opened and closed nodes.
         for row in grid:
             for node in row:
-                node.reset_path()
+                if not node.border_node():
+                    node.reset_path()

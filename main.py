@@ -25,6 +25,10 @@ blue = (0, 0, 255)  # End node.
 orange = (255, 165, 0)  # Start node.
 purple = (255, 0, 255)  # Path.
 
+borb = [(0, 0, 0), (128, 128, 128)]
+sepb = [(255, 165, 0), (0, 0, 255), (255, 0, 255)]
+cop = [(255, 0, 0), (0, 255, 0), (255, 0, 255)]
+
 # Number of rows and columns on the screen. Buggy when changed.
 rows = 50
 cols = 50
@@ -48,81 +52,85 @@ class Node():
         self.total_rows = total_rows
         self.total_cols = total_cols
 
-    def position(self):
+    def position(self) -> tuple:
         return self.row, self.col
 
     """
-
     Next set of methods either makes the node a certain color or 
     returns the bolean value of the node's color.
     
     """
 
-    def closed_node(self):
+    def closed_node(self) -> bool:
         return self.color == red
 
-    def make_closed(self):
+    def make_closed(self) -> None:
         self.color = red
 
-    def opened_node(self):
+    def opened_node(self) -> bool:
         return self.color == green
 
-    def make_opened(self):
+    def make_opened(self) -> None:
         self.color = green
 
-    def barrier_node(self):
+    def barrier_node(self) -> bool:
         return self.color == black
 
-    def make_barrier(self):
+    def make_barrier(self) -> None:
         self.color = black
 
-    def start_node(self):
+    def start_node(self) -> bool:
         return self.color == orange
 
-    def make_start(self):
+    def make_start(self) -> None:
         self.color = orange
 
-    def end_node(self):
+    def end_node(self) -> bool:
         return self.color == blue
 
-    def make_end(self):
+    def make_end(self) -> None:
         self.color = blue
 
-    def path_node(self):
+    def path_node(self) -> bool:
         return self.color == purple
 
-    def make_path(self):
+    def make_path(self) -> None:
         self.color = purple
 
-    def border_node(self):
+    def border_node(self) -> bool:
         return self.color == grey
 
     # Method to draw borders around the screen.
-    def make_border(self):
+    def make_border(self) -> None:
         if self.row == 0 or self.row == self.total_rows-1:
             self.color = grey
         if self.col == 0 or self.col == self.total_cols-1:
             self.color = grey
 
     # Methods to reset certain nodes.
-    def reset(self):
+    def reset(self) -> None:
         self.color = white
 
-    def reset_barriers(self):
+    def random_barriers(self, n: int) -> None:
+        probability = random.randint(1, n)
+        if probability == 1 and self.color not in sepb:
+            self.make_barrier()
+
+    def reset_barriers(self) -> None:
         if self.barrier_node():
             self.reset()
 
-    def reset_path(self):
-        if self.closed_node() or self.opened_node() or self.path_node():
+    def reset_path(self) -> None:
+        if self.color in cop:
             self.reset()
 
     # Drawing the nodes.
-    def draw(self, screen):
+    def draw(self, screen: object) -> None:
         pygame.draw.rect(screen, self.color,
                          (self.x, self.y, self.width, self.height))
 
     # Method for adding neigbour nodes to a list.
-    def update_neighbors(self, grid):
+    def update_neighbors(self, grid: list) -> None:
         # Down.
         if self.row < self.total_rows - 1 and not \
             (grid[self.row + 1][self.col].barrier_node() or
@@ -147,10 +155,9 @@ class Node():
              grid[self.row][self.col - 1].border_node()):
             self.neighbors.append(grid[self.row][self.col - 1])
 
+
 # Adding all the nodes to a list, creates 2D array of all the class objects.
-
-
-def create_grid(rows, cols, width, height):
+def create_grid(rows: int, cols: int, width: int, height: int) -> list:
     grid = []
     node_height = height // rows
     node_width = width // cols
@@ -158,40 +165,44 @@ def create_grid(rows, cols, width, height):
         grid.append([])
         for j in range(cols):
             node = Node(i, j, node_width, node_height, rows, cols)
+
             grid[i].append(node)
     return grid
 
 
 # Creates random barriers according to given probability of node becoming a barrier.
-def random_barriers(grid, n):
+def random_barriers(grid: list, n: int) -> None:
     for row in grid:
         for node in row:
-            number = random.randint(1, n)
-            # Barriers cant generate on borders, start, end, or path.
-            if number == 1 and not \
-                    (node.border_node()
-                     or node.start_node()
-                     or node.end_node()
-                     or node.path_node()):
-                node.make_barrier()
-            else:
-                pass
+            node.random_barriers(probability)
+
 
 # Function for drawing all the nodes to the screen.
-
-
-def draw(screen, grid):
+def draw(screen: object, grid: list) -> None:
     screen.fill(white)
     for row in grid:
         for node in row:
             node.draw(screen)
             node.make_border()
 
+    #draw_grid(screen, rows, cols, screen_width, screen_height)
     pygame.display.update()
 
 
+def draw_grid(screen: object, rows: int, cols: int, width: int, height: int) -> None:
+    node_height = height // rows
+    node_width = width // cols
+
+    for i in range(rows):
+        pygame.draw.line(screen, black, (0, i*node_height),
+                         (width, i * node_height))
+        for j in range(cols):
+            pygame.draw.line(screen, black, (j*node_width, 0),
+                             (j * node_width, height))
+
+
 # After the path is found, it is drawn
-def path(last_node, current):
+def path(last_node: object, current: object) -> None:
     while current in last_node:
         current = last_node[current]
         current.make_path()
@@ -199,14 +210,14 @@ def path(last_node, current):
 
 
 # Formula for calculating manhattan (or "L") distance.
-def h_score(p1, p2):
+def h_score(p1: tuple, p2: tuple) -> int:
     x1, y1 = p1
     x2, y2 = p2
     return abs(x1 - x2) + abs(y1 - y2)
 
 
 # Function to get position of clicked node.
-def get_pos(pos, rows, cols, width, height):
+def get_pos(pos: tuple, rows: int, cols: int, width: int, height: int) -> tuple:
     node_height = height // rows
     node_width = width // cols
     y, x = pos
@@ -215,10 +226,9 @@ def get_pos(pos, rows, cols, width, height):
 
     return row, col
 
+
 # A* pathfinding algorithm. Explained in Readme.
-
-
-def algorithm(grid, start, end):
+def algorithm(grid: list, start: object, end: object) -> bool:
     global finished
     count = 0
     open_set = PriorityQueue()
@@ -357,6 +367,9 @@ while run:
     if key[K_RETURN] and start and end:
         for row in grid:
             for node in row:
+                if node.color in cop:
+                    node.reset()
+                node.neighbors.clear()
                 # Generate neighbors for every node.
                 node.update_neighbors(grid)
 
@@ -395,7 +408,6 @@ while run:
 
     # Reset path, opened and closed nodes.
     if key[K_p]:
-
         for row in grid:
             for node in row:
                 if not node.border_node():

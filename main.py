@@ -209,7 +209,7 @@ def draw_grid(screen: object, rows: int, cols: int, width: int, height: int) -> 
 
 
 # After the path is found, it is drawn
-def path(last_node: object, current: object) -> None:
+def path(last_node: set, current: object) -> None:
     while current in last_node:
         current = last_node[current]
         current.make_path()
@@ -289,6 +289,7 @@ def algorithm(grid: list, start: object, end: object) -> bool:
         if current != start:
             current.make_closed()
 
+    pyautogui.alert("There isn't any path to be found")
     return False
 
 

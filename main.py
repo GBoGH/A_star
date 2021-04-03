@@ -6,6 +6,8 @@ import pygame
 from pygame.locals import *
 import pyautogui
 
+from custom import *
+
 pygame.init()
 
 screen_height = 800
@@ -25,17 +27,22 @@ blue = (0, 0, 255)  # End node.
 orange = (255, 165, 0)  # Start node.
 purple = (255, 0, 255)  # Path.
 
+# Barrier or norder.
 borb = [(0, 0, 0), (128, 128, 128)]
-sepb = [(255, 165, 0), (0, 0, 255), (255, 0, 255)]
+
+# Start, end, path, border.
+sepb = [(255, 165, 0), (0, 0, 255), (255, 0, 255), (128, 128, 128)]
+
+# Closed, opened, path.
 cop = [(255, 0, 0), (0, 255, 0), (255, 0, 255)]
 
 # Number of rows and columns on the screen. Buggy when changed.
-rows = 50
-cols = 50
+rows = ROWS
+cols = COLUMNS
 
 # One in x probability that a node will became barrier in random_barriers().
 # 5 is the optimal number.
-probability = 5
+probability = PROBABILITY
 
 
 # Creating the Node object.

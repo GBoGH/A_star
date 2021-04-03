@@ -1,5 +1,4 @@
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)  [![Python](https://img.shields.io/badge/Python-3.9.0-yellow)](https://www.python.org/)  [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/GBoGH/A_star.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/GBoGH/A_star/context:python)
 # A* pathfinding algorithm visualization
 My implementation of A* and its visualization using Python and Pygame.
 

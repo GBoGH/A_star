@@ -27,7 +27,7 @@ blue = (0, 0, 255)  # End node.
 orange = (255, 165, 0)  # Start node.
 purple = (255, 0, 255)  # Path.
 
-# Barrier or norder.
+# Barrier or border.
 borb = [(0, 0, 0), (128, 128, 128)]
 
 # Start, end, path, border.
